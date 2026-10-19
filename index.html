@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - 博客系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", -apple-system, sans-serif;
+            background: #120f17;
+            color: #e8e6f0;
+        }
+
+        /* ===== Micro Slats 容器（tuo.txt 的 .micro-slats 样式）===== */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #120f17;
+        }
+        #slats {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+            transform: translateY(-40px);
+        }
+        .hero-content h1 {
+            font-size: 44px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 18px rgba(168,85,247,.45));
+            margin-bottom: 12px;
+        }
+        .hero-content p {
+            font-size: 36px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .hero-content .hero-sub {
+            color: rgba(232,230,240,.65);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        /* ===== 内容区 ===== */
+        .container { max-width: 1080px; margin: 0 auto; padding: 32px 16px 48px; }
+
+        .stats { display: flex; gap: 16px; margin-bottom: 28px; }
+        .stat-card {
+            flex: 1;
+            background: #1a1622;
+            border: 1px solid rgba(168,85,247,.15);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color .2s;
+        }
+        .stat-card:hover { border-color: rgba(168,85,247,.5); }
+        .stat-card .num { font-size: 28px; font-weight: 700; color: #c084fc; }
+        .stat-card .label { font-size: 13px; color: #8a8496; margin-top: 4px; }
+
+        .blog-card {
+            background: #1a1622;
+            border: 1px solid rgba(168,85,247,.12);
+            border-radius: 14px;
+            padding: 22px 24px;
+            margin-bottom: 16px;
+            transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+            cursor: pointer;
+        }
+        .blog-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168,85,247,.55);
+            box-shadow: 0 8px 28px rgba(168,85,247,.15);
+        }
+        .blog-card h2 { font-size: 19px; margin-bottom: 8px; color: #f0eef8; }
+        .blog-card .summary {
+            font-size: 14px;
+            color: #a09aae;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        .blog-card .meta {
+            display: flex;
+            gap: 14px;
+            font-size: 12px;
+            color: #6f6880;
+        }
+        .tag {
+            background: rgba(168,85,247,.14);
+            color: #c084fc;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+        .loading { text-align: center; padding: 40px; color: #8a8496; }
+
+        /* ===== 主栏 + 侧栏布局 ===== */
+        .layout { display: grid; grid-template-columns: 1fr 260px; gap: 24px; align-items: start; }
+        @media (max-width: 820px) {
+            .layout { grid-template-columns: 1fr; }
+            .hero { height: 420px; }
+            .hero-content h1 { font-size: 30px; }
+            .lanyard-wrap { height: 380px; flex-direction: column; }
+            #crystal-ball, #lanyard { flex: 1; min-height: 180px; }
+            .stats { flex-wrap: wrap; gap: 12px; }
+            .stat-card { min-width: calc(50% - 6px); padding: 16px 12px; }
+            .stat-card .num { font-size: 22px; }
+            .blog-card { padding: 16px 18px; }
+            .blog-card h2 { font-size: 17px; }
+            .blog-card .meta { flex-wrap: wrap; gap: 8px; font-size: 11px; }
+            .container { padding: 20px 12px 36px; }
+        }
+
+        .panel {
+            background: #1a1622;
+            border: 1px solid rgba(168,85,247,.12);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+        .panel h3 {
+            font-size: 14px;
+            color: #c084fc;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel h3::before {
+            content: '';
+            width: 4px; height: 14px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #a855f7, #6d28d9);
+        }
+
+        .cat-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 10px; border-radius: 8px;
+            font-size: 14px; color: #c9c4d6;
+            transition: background .15s;
+        }
+        .cat-item:hover { background: rgba(168,85,247,.1); }
+        .cat-item .cnt {
+            font-size: 12px; color: #8a8496;
+            background: rgba(168,85,247,.14);
+            padding: 1px 8px; border-radius: 9px;
+        }
+
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+        .cloud-tag {
+            background: rgba(168,85,247,.12);
+            border: 1px solid rgba(168,85,247,.25);
+            color: #c084fc;
+            padding: 4px 12px; border-radius: 12px;
+            transition: border-color .15s, transform .15s;
+        }
+        .cloud-tag:hover { border-color: rgba(168,85,247,.7); transform: translateY(-1px); }
+        .cloud-tag .cnt { font-size: 11px; color: #8a8496; margin-left: 4px; }
+
+        .section-title {
+            font-size: 17px; color: #f0eef8; margin: 0 0 16px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-title::before {
+            content: ''; width: 4px; height: 16px; border-radius: 2px;
+            background: linear-gradient(180deg, #a855f7, #6d28d9);
+        }
+
+        .comment-item {
+            background: #1a1622;
+            border: 1px solid rgba(168,85,247,.12);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+        .comment-item .head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; font-size: 13px;
+        }
+        .comment-item .who { color: #c084fc; font-weight: 600; }
+        .comment-item .time { color: #6f6880; font-size: 12px; }
+        .comment-item .text { font-size: 14px; color: #c9c4d6; line-height: 1.7; }
+        .comment-item .from { font-size: 12px; color: #6f6880; margin-top: 8px; }
+
+        .link-cloud { display: flex; flex-wrap: wrap; gap: 12px; }
+        .link-item {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #1a1622;
+            border: 1px solid rgba(168,85,247,.15);
+            border-radius: 10px;
+            padding: 10px 18px;
+            color: #c9c4d6; font-size: 14px;
+            text-decoration: none;
+            transition: border-color .15s, transform .15s;
+        }
+        .link-item:hover { border-color: rgba(168,85,247,.55); transform: translateY(-2px); color: #e8e6f0; }
+        .link-item::before {
+            content: ''; width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #a855f7;
+        }
+
+        /* ===== 关于博主 ===== */
+        .about-panel { text-align: center; }
+        .about-card { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .avatar {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #6d28d9);
+            color: #fff;
+            font-size: 22px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(168,85,247,.4);
+        }
+        .about-info { text-align: left; }
+        .about-info .name { font-size: 16px; font-weight: 600; color: #f0eef8; }
+        .about-info .major { font-size: 12px; color: #c084fc; margin-top: 2px; }
+        .about-bio {
+            font-size: 13px; color: #a09aae; line-height: 1.6;
+            text-align: left; margin: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #55505f;
+            font-size: 13px;
+            border-top: 1px solid rgba(168,85,247,.08);
+        }
+        .lanyard-wrap {
+            display: flex;
+            width: 100%;
+            height: 420px;
+            margin-bottom: 8px;
+            position: relative;
+            gap: 16px;
+        }
+        #crystal-ball {
+            flex: 1;
+            position: relative;
+            min-width: 0;
+        }
+        #lanyard {
+            flex: 1;
+            position: relative;
+            min-width: 0;
+        }
+        .crystalized-ball {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* ===== GridScan 网格扫描 ===== */
+        #bottom-effect {
+            width: 100%;
+            height: 520px;
+            position: relative;
+            overflow: hidden;
+            background: #120f17;
+        }
+        .grid-scan {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+        .grid-scan-canvas {
+            position: absolute;
+            inset: 0;
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: pan-y;
+        }
+        .lanyard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .lanyard-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <link rel="modulepreload" href="./three.module.js">
+    <link rel="modulepreload" href="./ogl.js">
+    <script>
+    /* WebGL 上下文丢失兜底：特效被系统回收时自动刷新一次恢复（60 秒内最多一次） */
+    window.addEventListener('webglcontextlost', function(e) {
+        e.preventDefault();
+        var t = +sessionStorage.getItem('gl_reload_t') || 0;
+        if (Date.now() - t > 60000) {
+            sessionStorage.setItem('gl_reload_t', String(Date.now()));
+            location.reload();
+        }
+    }, true);
+    </script>
+    <script>
+    /* 特效看门狗：20 秒内顶部两个特效没渲染出来就自动刷新重试，最多 3 次 */
+    (function () {
+        setTimeout(function () {
+            var lanyard = !!document.querySelector('#lanyard canvas');
+            var ball = !!document.querySelector('#crystal-ball canvas');
+            if (lanyard && ball) { sessionStorage.removeItem('fx_retry'); return; }
+            var n = +(sessionStorage.getItem('fx_retry') || 0);
+            if (n < 3) {
+                sessionStorage.setItem('fx_retry', String(n + 1));
+                location.reload();
+            }
+        }, 20000);
+    })();
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <!-- 水晶球 + 工牌特效 -->
+    <div class="lanyard-wrap">
+        <div id="crystal-ball"></div>
+        <div id="lanyard"></div>
+    </div>
+
+    <!-- Hero：Micro Slats（ReactBits 原版移植，参数来自 tr.txt）-->
+    <div class="hero" id="slats-wrap">
+        <canvas id="slats" aria-hidden="true"></canvas>
+        <div class="hero-content">
+            <h1>Welcome</h1>
+            <p>张良铖的博客</p>
+            <p class="hero-sub">人工智能 · 机器学习 · 深度学习</p>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="num" id="blog-count">-</div>
+            <div class="label">文章总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="user-count">-</div>
+            <div class="label">注册用户</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="today-date">-</div>
+            <div class="label">今天是</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <div class="main-col">
+            <h2 class="section-title">最新文章</h2>
+            <div id="blog-list" class="loading">正在加载文章列表...</div>
+        </div>
+        <aside class="sidebar">
+            <div class="panel about-panel">
+                <h3>关于博主</h3>
+                <div class="about-card">
+                    <div class="avatar" id="author-avatar">张</div>
+                    <div class="about-info">
+                        <div class="name" id="author-name">张良铖</div>
+                        <div class="major">人工智能技术应用专业</div>
+                    </div>
+                </div>
+                <p class="about-bio" id="author-bio">人工智能技术应用专业在读，热爱机器学习与深度学习，记录学习与成长中的点滴。</p>
+            </div>
+            <div class="panel">
+                <h3>文章分类</h3>
+                <div id="category-list"><p class="loading" style="padding:12px">加载中...</p></div>
+            </div>
+            <div class="panel">
+                <h3>标签云</h3>
+                <div id="tag-cloud" class="tag-cloud"><p class="loading" style="padding:12px">加载中...</p></div>
+            </div>
+        </aside>
+    </div>
+
+    <h2 class="section-title" style="margin-top:32px">最新评论</h2>
+    <div id="comment-list"><p class="loading">正在加载评论...</p></div>
+</div>
+
+<!-- 底部特效容器 -->
+<div id="bottom-effect" style="width:100%;height:520px;position:relative;overflow:hidden;"></div>
+
+<footer>Weblog Blog System · Powered by Spring Boot 3 + MySQL &nbsp;|&nbsp; <span style="color:#8a8496;">谨供作者学习装逼使用</span></footer>
+
+<script type="module" src="lanyard.js?v=5"></script>
+<script type="module" src="crystalized-ball.js?v=5"></script>
+<script type="module" src="grid-scan.js?v=4"></script>
+
+<!-- 背景音乐：首次交互（点击/键盘/触屏滑动）后开始循环播放 -->
+<audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+<script>
+(() => {
+    const audio = document.getElementById('bg-music');
+    if (!audio) return;
+    let started = false;
+    const start = () => {
+        if (started) return;
+        const p = audio.play();
+        if (p && p.then) {
+            p.then(() => {
+                started = true;
+                ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(e =>
+                    document.removeEventListener(e, start));
+            }).catch(() => { /* 浏览器尚未允许，等待下一次交互 */ });
+        } else {
+            started = true;
+        }
+    };
+    ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(e =>
+        document.addEventListener(e, start, { passive: true }));
+})();
+</script>
+
+<script>
+/* ================================================================
+ * Micro Slats —— ReactBits 官方组件原版移植
+ * 移植自 one.txt（MicroSlats.jsx）：去掉 React 与 ogl 依赖，
+ * 着色器与算法逻辑保持 100% 原样，参数来自 tr.txt
+ * ================================================================ */
+(() => {
+    'use strict';
+
+    const container = document.getElementById('slats-wrap');
+    const canvas = document.getElementById('slats');
+
+    const gl = canvas.getContext('webgl2', {
+        alpha: true, premultipliedAlpha: true, antialias: false, depth: false
+    });
+    if (!gl) { console.warn('WebGL2 unavailable, Micro Slats disabled'); return; }
+
+    /* ---------- 参数（tr.txt 官方示例） ---------- */
+    const settings = {
+        color: parseColor('#A855F7', [0.66, 0.33, 0.97, 1]),
+        glintColor: parseColor('#ffffff', [1, 1, 1, 1]),
+        backgroundColor: parseColor('#120f17', [0, 0, 0, 1]),
+        slatWidth: 10, slatHeight: 25, gap: 3, roundness: 0.75,
+        scale: 1.5, speed: 0.6, direction: 250, chop: 0.55,
+        stretch: 0, glint: 0.7, contrast: 1.25, perspective: 0.55, fog: 0.55,
+        interactive: true, cursorStrength: 1, cursorSize: 40,
+        swirl: 0, trail: 1.4, lean: 0,
+        intro: true, introDuration: 1.5, paused: false
+    };
+
+    const FLUID_SIZE = 96;
+    const PRESSURE_STEPS = 16;
+    const SPLAT_FORCE = 6900;
+    const SPLASH_JETS = 3;
+    const PIXEL_BUDGET = 4.5e6;
+
+    const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+    function parseColor(value, fallback) {
+        try {
+            const ctx = document.createElement('canvas').getContext('2d');
+            if (!ctx) return fallback;
+            ctx.fillStyle = '#000000';
+            ctx.fillStyle = value;
+            const resolved = ctx.fillStyle;
+            if (resolved.startsWith('#')) {
+                const n = parseInt(resolved.slice(1), 16);
+                return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, 1];
+            }
+            const parts = resolved.match(/[\d.]+/g);
+            if (!parts || parts.length < 3) return fallback;
+            return [Number(parts[0]) / 255, Number(parts[1]) / 255, Number(parts[2]) / 255, parts[3] ? Number(parts[3]) : 1];
+        } catch { return fallback; }
+    }
+
+    /* ---------- 着色器（one.txt 原样移植） ---------- */
+    const passVertex = `#version 300 es
+in vec2 position;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
+
+    const fluidVertex = `#version 300 es
+in vec2 position;
+uniform vec2 uTexel;
+out vec2 vUv;
+out vec2 vL;
+out vec2 vR;
+out vec2 vT;
+out vec2 vB;
+void main() {
+  vUv = position * 0.5 + 0.5;
+  vL = vUv - vec2(uTexel.x, 0.0);
+  vR = vUv + vec2(uTexel.x, 0.0);
+  vT = vUv + vec2(0.0, uTexel.y);
+  vB = vUv - vec2(0.0, uTexel.y);
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
+
+    const fluidHead = `#version 300 es
+precision highp float;
+in vec2 vUv;
+in vec2 vL;
+in vec2 vR;
+in vec2 vT;
+in vec2 vB;
+out vec4 fragColor;
+`;
+
+    const splatFragment = `${fluidHead}
+uniform sampler2D uTarget;
+uniform float uAspect;
+uniform vec2 uPoint;
+uniform vec3 uValue;
+uniform float uRadius;
+void main() {
+  vec2 offset = vUv - uPoint;
+  offset.x *= uAspect;
+  float falloff = exp(-dot(offset, offset) / uRadius);
+  fragColor = vec4(texture(uTarget, vUv).xyz + uValue * falloff, 1.0);
+}
+`;
+
+    const curlFragment = `${fluidHead}
+uniform sampler2D uVelocity;
+void main() {
+  float left = texture(uVelocity, vL).y;
+  float right = texture(uVelocity, vR).y;
+  float top = texture(uVelocity, vT).x;
+  float bottom = texture(uVelocity, vB).x;
+  fragColor = vec4(0.5 * (right - left - top + bottom), 0.0, 0.0, 1.0);
+}
+`;
+
+    const vorticityFragment = `${fluidHead}
+uniform sampler2D uVelocity;
+uniform sampler2D uCurl;
+uniform float uSwirl;
+uniform float uDt;
+void main() {
+  float left = texture(uCurl, vL).x;
+  float right = texture(uCurl, vR).x;
+  float top = texture(uCurl, vT).x;
+  float bottom = texture(uCurl, vB).x;
+  float middle = texture(uCurl, vUv).x;
+  vec2 force = 0.5 * vec2(abs(top) - abs(bottom), abs(right) - abs(left));
+  force = force / (length(force) + 0.0001) * uSwirl * middle;
+  force.y = -force.y;
+  vec2 velocity = texture(uVelocity, vUv).xy + force * uDt;
+  fragColor = vec4(clamp(velocity, -1000.0, 1000.0), 0.0, 1.0);
+}
+`;
+
+    const divergenceFragment = `${fluidHead}
+uniform sampler2D uVelocity;
+void main() {
+  vec2 middle = texture(uVelocity, vUv).xy;
+  float left = vL.x < 0.0 ? -middle.x : texture(uVelocity, vL).x;
+  float right = vR.x > 1.0 ? -middle.x : texture(uVelocity, vR).x;
+  float top = vT.y > 1.0 ? -middle.y : texture(uVelocity, vT).y;
+  float bottom = vB.y < 0.0 ? -middle.y : texture(uVelocity, vB).y;
+  fragColor = vec4(0.5 * (right - left + top - bottom), 0.0, 0.0, 1.0);
+}
+`;
+
+    const pressureFragment = `${fluidHead}
+uniform sampler2D uPressure;
+uniform sampler2D uDivergence;
+void main() {
+  float left = texture(uPressure, vL).x;
+  float right = texture(uPressure, vR).x;
+  float top = texture(uPressure, vT).x;
+  float bottom = texture(uPressure, vB).x;
+  float divergence = texture(uDivergence, vUv).x;
+  fragColor = vec4((left + right + top + bottom - divergence) * 0.25, 0.0, 0.0, 1.0);
+}
+`;
+
+    const projectFragment = `${fluidHead}
+uniform sampler2D uPressure;
+uniform sampler2D uVelocity;
+void main() {
+  float left = texture(uPressure, vL).x;
+  float right = texture(uPressure, vR).x;
+  float top = texture(uPressure, vT).x;
+  float bottom = texture(uPressure, vB).x;
+  vec2 velocity = texture(uVelocity, vUv).xy - vec2(right - left, top - bottom);
+  fragColor = vec4(velocity, 0.0, 1.0);
+}
+`;
+
+    const advectFragment = `${fluidHead}
+uniform sampler2D uVelocity;
+uniform sampler2D uSource;
+uniform vec2 uTexel;
+uniform float uDt;
+uniform float uFade;
+void main() {
+  vec2 from = vUv - uDt * texture(uVelocity, vUv).xy * uTexel;
+  fragColor = texture(uSource, from) / (1.0 + uFade * uDt);
+}
+`;
+
+    const scaleFragment = `${fluidHead}
+uniform sampler2D uSource;
+uniform float uValue;
+void main() {
+  fragColor = texture(uSource, vUv) * uValue;
+}
+`;
+
+    const fieldFragment = `#version 300 es
+precision highp float;
+uniform vec2 uSize;
+uniform vec4 uGrid;
+uniform vec2 uOrigin;
+uniform vec2 uSlat;
+uniform float uTime;
+uniform float uScale;
+uniform float uDirection;
+uniform float uChop;
+uniform float uStretch;
+uniform float uGlint;
+uniform float uContrast;
+uniform float uPerspective;
+uniform float uFog;
+uniform float uIntro;
+uniform sampler2D tVelocity;
+uniform sampler2D tInk;
+uniform vec2 uFluidTexel;
+uniform float uFluid;
+uniform float uInk;
+uniform float uLean;
+out vec4 fragColor;
+
+const float TURN[4] = float[4](0.0, -0.95, 0.78, 1.62);
+const float LENGTH[4] = float[4](2.6, 1.7, 1.12, 0.76);
+const float HEIGHT[4] = float[4](1.0, 0.75, 0.5, 0.3);
+const float SHIFT[4] = float[4](0.0, 2.3, 4.1, 1.1);
+
+void main() {
+  vec2 cell = floor(gl_FragCoord.xy);
+  float row = uGrid.y - 1.0 - cell.y;
+  vec2 center = uOrigin + vec2(cell.x, row) * uGrid.zw + uSlat * 0.5;
+  float v = clamp(center.y / uSize.y, 0.0, 1.0);
+
+  vec2 flow = vec2(0.0);
+  float ink = 0.0;
+  if (uFluid > 0.5) {
+    vec2 fluidUv = clamp(vec2(center.x / uSize.x, 1.0 - center.y / uSize.y), 0.0, 1.0);
+    flow = texture(tVelocity, fluidUv).xy * uFluidTexel * uSize;
+    ink = texture(tInk, fluidUv).x;
+  }
+
+  float horizon = mix(8.0, 0.5, uPerspective);
+  float depth = (1.0 + horizon) / (v + horizon);
+  vec2 world = vec2((center.x - uSize.x * 0.5) / uSize.y * depth, (depth - 1.0) * horizon * 2.2);
+  world -= flow * 0.00018 * depth;
+  world /= max(uScale, 0.05);
+
+  float meander = 0.55 * sin(dot(world, vec2(0.23, 0.41)) * 0.9 + uTime * 0.13)
+    + 0.3 * sin(dot(world, vec2(-0.37, 0.19)) * 1.4 - uTime * 0.09);
+
+  float steep = uChop * 0.45;
+  float height = 0.0;
+  float total = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float angle = uDirection + TURN[i];
+    vec2 heading = vec2(cos(angle), sin(angle));
+    float k = 6.2831853 / LENGTH[i];
+    float omega = sqrt(9.81 * k) * 0.35;
+    float theta = k * dot(world, heading) - omega * uTime + SHIFT[i] + meander * (0.6 + 0.3 * float(i));
+    height += HEIGHT[i] * (cos(theta) + steep * cos(2.0 * theta));
+    total += HEIGHT[i] * (1.0 + steep);
+  }
+  float level = clamp(0.5 + 0.5 * height / (total * 0.85), 0.0, 1.0);
+  float crest = smoothstep(0.6, 1.0, level);
+  float glint = crest * crest * uGlint;
+
+  float haze = mix(1.0, 1.0 - uFog, pow(1.0 - v, 1.4));
+  float light = (pow(level, uContrast) + glint * 0.8) * haze;
+  float glow = 1.0 - exp(-max(ink, 0.0) * uInk * 1.6);
+  light = 1.0 - (1.0 - clamp(light, 0.0, 1.0)) * (1.0 - glow);
+
+  float front = uIntro * 1.35;
+  float reveal = 1.0 - smoothstep(front - 0.35, front, v);
+  float sweep = exp(-pow((v - front + 0.22) / 0.07, 2.0)) * (1.0 - uIntro);
+  light = (light + sweep * 0.8) * reveal;
+  light = max(light, 0.045 * reveal);
+  float span = mix(1.0 - uStretch, 1.0, level) + glow * 0.3;
+  span = clamp(span, 0.08, 1.0) * mix(0.1, 1.0, reveal);
+  float tint = clamp(max(glint * 1.4, glow * 0.9) + sweep, 0.0, 1.0);
+  float lean = clamp(flow.x / 1400.0, -1.0, 1.0) * uLean * reveal;
+
+  fragColor = vec4(clamp(light, 0.0, 1.0), span, tint, 0.5 + 0.5 * lean);
+}
+`;
+
+    const slatFragment = `#version 300 es
+precision highp float;
+uniform sampler2D tField;
+uniform vec2 uSize;
+uniform float uDpr;
+uniform vec4 uGrid;
+uniform vec2 uOrigin;
+uniform vec2 uSlat;
+uniform float uRound;
+uniform float uTilt;
+uniform vec3 uColor;
+uniform vec3 uGlintColor;
+uniform vec4 uBackground;
+out vec4 fragColor;
+
+float pill(vec2 p, vec2 b, float r) {
+  vec2 q = abs(p) - b + r;
+  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+void main() {
+  vec2 p = vec2(gl_FragCoord.x, uSize.y * uDpr - gl_FragCoord.y) / uDpr;
+  vec2 local = p - uOrigin;
+  vec2 cell = floor(local / uGrid.zw);
+  vec4 background = vec4(uBackground.rgb * uBackground.a, uBackground.a);
+  vec4 slat = vec4(0.0);
+  int reach = uTilt > 0.0 ? 1 : 0;
+  for (int dx = -1; dx <= 1; dx++) {
+    if (abs(dx) > reach) continue;
+    vec2 neighbour = cell + vec2(float(dx), 0.0);
+    if (neighbour.x < 0.0 || neighbour.y < 0.0 || neighbour.x >= uGrid.x || neighbour.y >= uGrid.y) continue;
+    vec4 field = texelFetch(tField, ivec2(int(neighbour.x), int(uGrid.y - 1.0 - neighbour.y)), 0);
+    vec2 offset = local - neighbour * uGrid.zw - uSlat * 0.5;
+    float angle = (field.a - 0.5) * 2.0 * uTilt;
+    float c = cos(angle);
+    float s = sin(angle);
+    vec2 turned = vec2(c * offset.x + s * offset.y, c * offset.y - s * offset.x);
+    vec2 halfSize = vec2(uSlat.x * 0.5, uSlat.y * 0.5 * field.g);
+    float radius = uRound * min(halfSize.x, halfSize.y);
+    float alpha = clamp(0.5 - pill(turned, halfSize, radius) * uDpr, 0.0, 1.0) * field.r;
+    if (alpha > slat.a) slat = vec4(mix(uColor, uGlintColor, field.b) * alpha, alpha);
+  }
+  fragColor = slat + background * (1.0 - slat.a);
+}
+`;
+
+    /* ---------- mini-ogl：替代 ogl 库的最小实现 ---------- */
+    const blankTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, blankTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    function compile(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+        return s;
+    }
+
+    function createProgram(vertex, fragment, uniforms) {
+        const p = gl.createProgram();
+        gl.attachShader(p, compile(gl.VERTEX_SHADER, vertex));
+        gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fragment));
+        gl.linkProgram(p);
+        if (!gl.getProgramParameter(p, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p));
+        const active = {};
+        const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < n; i++) {
+            const info = gl.getActiveUniform(p, i);
+            active[info.name] = { loc: gl.getUniformLocation(p, info.name), type: info.type };
+        }
+        return { prog: p, uniforms, active };
+    }
+
+    function createMesh(program) {
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        const loc = gl.getAttribLocation(program.prog, 'position');
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+        gl.bindVertexArray(null);
+        return { program, vao };
+    }
+
+    function createTarget(opts) {
+        const t = Object.assign({
+            width: 1, height: 1, type: gl.UNSIGNED_BYTE, internalFormat: gl.RGBA,
+            format: gl.RGBA, minFilter: gl.LINEAR, magFilter: gl.LINEAR
+        }, opts);
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, t.minFilter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, t.magFilter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, t.internalFormat, t.width, t.height, 0, t.format, t.type, null);
+        const buffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        return { texture, buffer, width: t.width, height: t.height };
+    }
+
+    function disposeTarget(t) { gl.deleteFramebuffer(t.buffer); gl.deleteTexture(t.texture); }
+
+    let dpr = 1;
+    function setSize(w, h) {
+        dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(PIXEL_BUDGET / (w * h)));
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+    }
+
+    function render(mesh, target, clear = true) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.buffer : null);
+        const w = target ? target.width : canvas.width;
+        const h = target ? target.height : canvas.height;
+        gl.viewport(0, 0, w, h);
+        if (clear) { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
+        const { prog, active, uniforms } = mesh.program;
+        gl.useProgram(prog);
+        let unit = 0;
+        for (const name in active) {
+            const u = uniforms[name];
+            if (!u) continue;
+            const { loc, type } = active[name];
+            const v = u.value;
+            if (type === gl.FLOAT) gl.uniform1f(loc, v);
+            else if (type === gl.INT) gl.uniform1i(loc, v);
+            else if (type === gl.SAMPLER_2D) {
+                gl.activeTexture(gl.TEXTURE0 + unit);
+                gl.bindTexture(gl.TEXTURE_2D, v || blankTex);
+                gl.uniform1i(loc, unit);
+                unit++;
+            }
+            else if (type === gl.FLOAT_VEC2) gl.uniform2f(loc, v[0], v[1]);
+            else if (type === gl.FLOAT_VEC3) gl.uniform3f(loc, v[0], v[1], v[2]);
+            else if (type === gl.FLOAT_VEC4) gl.uniform4f(loc, v[0], v[1], v[2], v[3]);
+        }
+        gl.bindVertexArray(mesh.vao);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.bindVertexArray(null);
+    }
+
+    /* ---------- 程序与网格 ---------- */
+    const triangle = (fragment, uniforms) => createMesh(createProgram(passVertex, fragment, uniforms));
+
+    let fieldTarget = createTarget({ width: 1, height: 1, minFilter: gl.NEAREST, magFilter: gl.NEAREST });
+
+    const fieldUniforms = {
+        uSize: { value: [1, 1] },
+        uGrid: { value: [1, 1, 1, 1] },
+        uOrigin: { value: [0, 0] },
+        uSlat: { value: [1, 1] },
+        uTime: { value: 0 },
+        uScale: { value: 1 },
+        uDirection: { value: 0 },
+        uChop: { value: 0.5 },
+        uStretch: { value: 0.3 },
+        uGlint: { value: 1 },
+        uContrast: { value: 1 },
+        uPerspective: { value: 0.7 },
+        uFog: { value: 0.5 },
+        uIntro: { value: 0 },
+        tVelocity: { value: null },
+        tInk: { value: null },
+        uFluidTexel: { value: [1, 1] },
+        uFluid: { value: 0 },
+        uInk: { value: 1 },
+        uLean: { value: 0.5 }
+    };
+    const fieldMesh = triangle(fieldFragment, fieldUniforms);
+
+    const slatUniforms = {
+        tField: { value: fieldTarget.texture },
+        uSize: { value: [1, 1] },
+        uDpr: { value: 1 },
+        uGrid: { value: [1, 1, 1, 1] },
+        uOrigin: { value: [0, 0] },
+        uSlat: { value: [1, 1] },
+        uRound: { value: 1 },
+        uTilt: { value: 0 },
+        uColor: { value: [1, 1, 1] },
+        uGlintColor: { value: [1, 1, 1] },
+        uBackground: { value: [0, 0, 0, 1] }
+    };
+    const slatMesh = triangle(slatFragment, slatUniforms);
+
+    const fluidTexel = { value: [1, 1] };
+    /* 流体片元着色器依赖 fluidVertex 提供的 vUv/vL/vR/vT/vB varyings，
+       不能用 passVertex（否则链接失败，流体交互整体失效） */
+    const fluidPass = (fragment, uniforms) =>
+        createMesh(createProgram(fluidVertex, fragment, Object.assign({ uTexel: fluidTexel }, uniforms)));
+
+    const splatPass = fluidPass(splatFragment, {
+        uTarget: { value: null },
+        uAspect: { value: 1 },
+        uPoint: { value: [0, 0] },
+        uValue: { value: [0, 0, 0] },
+        uRadius: { value: 0.01 }
+    });
+    const curlPass = fluidPass(curlFragment, { uVelocity: { value: null } });
+    const vorticityPass = fluidPass(vorticityFragment, {
+        uVelocity: { value: null },
+        uCurl: { value: null },
+        uSwirl: { value: 20 },
+        uDt: { value: 0.016 }
+    });
+    const divergencePass = fluidPass(divergenceFragment, { uVelocity: { value: null } });
+    const pressurePass = fluidPass(pressureFragment, { uPressure: { value: null }, uDivergence: { value: null } });
+    const projectPass = fluidPass(projectFragment, { uPressure: { value: null }, uVelocity: { value: null } });
+    const advectPass = fluidPass(advectFragment, {
+        uVelocity: { value: null },
+        uSource: { value: null },
+        uDt: { value: 0.016 },
+        uFade: { value: 1 }
+    });
+    const scalePass = fluidPass(scaleFragment, { uSource: { value: null }, uValue: { value: 0 } });
+
+    const floatTargets = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+    /* ---------- 状态 ---------- */
+    let width = 1, height = 1;
+    let raf = 0, last = performance.now(), time = 0, introClock = 0;
+    let visible = true, alive = true;
+    let fluid = null, fluidUntil = 0, fluidDirty = false, splashTurn = 0;
+    const splats = [];
+    const pointer = { x: 0, y: 0, tracked: false };
+
+    /* ---------- 流体模拟 ---------- */
+    function swapPair(w, h) {
+        const opts = floatTargets
+            ? { width: w, height: h, type: gl.HALF_FLOAT, internalFormat: gl.RGBA16F }
+            : { width: w, height: h, type: gl.UNSIGNED_BYTE, internalFormat: gl.RGBA8 };
+        return {
+            read: createTarget(opts),
+            write: createTarget(opts),
+            swap() { const n = this.read; this.read = this.write; this.write = n; }
+        };
+    }
+
+    function disposeFluid() {
+        if (!fluid) return;
+        [fluid.velocity, fluid.ink, fluid.pressure].forEach(pair => {
+            disposeTarget(pair.read);
+            disposeTarget(pair.write);
+        });
+        disposeTarget(fluid.divergence);
+        disposeTarget(fluid.curl);
+        fluid = null;
+    }
+
+    function buildFluid() {
+        const aspect = width / height;
+        const w = Math.max(8, Math.round(aspect >= 1 ? FLUID_SIZE * aspect : FLUID_SIZE));
+        const h = Math.max(8, Math.round(aspect >= 1 ? FLUID_SIZE : FLUID_SIZE / aspect));
+        if (fluid && fluid.width === w && fluid.height === h) return;
+        disposeFluid();
+        const type = floatTargets ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+        const ifmt = floatTargets ? gl.RGBA16F : gl.RGBA8;
+        fluid = {
+            width: w, height: h, floatOk: floatTargets,
+            velocity: swapPair(w, h),
+            ink: swapPair(w, h),
+            pressure: swapPair(w, h),
+            divergence: createTarget({ width: w, height: h, type: type, internalFormat: ifmt }),
+            curl: createTarget({ width: w, height: h, type: type, internalFormat: ifmt })
+        };
+        fluidTexel.value = [1 / w, 1 / h];
+    }
+
+    function splat(pair, point, value, radius) {
+        const u = splatPass.program.uniforms;
+        u.uTarget.value = pair.read.texture;
+        u.uAspect.value = width / height;
+        u.uPoint.value = point;
+        u.uValue.value = value;
+        u.uRadius.value = radius;
+        render(splatPass, pair.write, false);
+        pair.swap();
+    }
+
+    function stepFluid(f, dt, s) {
+        if (s.swirl > 0) {
+            curlPass.program.uniforms.uVelocity.value = f.velocity.read.texture;
+            render(curlPass, f.curl, false);
+
+            const vorticity = vorticityPass.program.uniforms;
+            vorticity.uVelocity.value = f.velocity.read.texture;
+            vorticity.uCurl.value = f.curl.texture;
+            vorticity.uSwirl.value = clamp(s.swirl, 0, 2) * 40;
+            vorticity.uDt.value = dt;
+            render(vorticityPass, f.velocity.write, false);
+            f.velocity.swap();
+        }
+
+        divergencePass.program.uniforms.uVelocity.value = f.velocity.read.texture;
+        render(divergencePass, f.divergence, false);
+
+        scalePass.program.uniforms.uSource.value = f.pressure.read.texture;
+        scalePass.program.uniforms.uValue.value = 0.8;
+        render(scalePass, f.pressure.write, false);
+        f.pressure.swap();
+
+        pressurePass.program.uniforms.uDivergence.value = f.divergence.texture;
+        for (let i = 0; i < PRESSURE_STEPS; i++) {
+            pressurePass.program.uniforms.uPressure.value = f.pressure.read.texture;
+            render(pressurePass, f.pressure.write, false);
+            f.pressure.swap();
+        }
+
+        projectPass.program.uniforms.uPressure.value = f.pressure.read.texture;
+        projectPass.program.uniforms.uVelocity.value = f.velocity.read.texture;
+        render(projectPass, f.velocity.write, false);
+        f.velocity.swap();
+
+        const fade = 1 / clamp(s.trail, 0.1, 10);
+        const advect = advectPass.program.uniforms;
+        advect.uDt.value = dt;
+        advect.uVelocity.value = f.velocity.read.texture;
+        advect.uSource.value = f.velocity.read.texture;
+        advect.uFade.value = fade * 1.4;
+        render(advectPass, f.velocity.write, false);
+        f.velocity.swap();
+
+        advect.uVelocity.value = f.velocity.read.texture;
+        advect.uSource.value = f.ink.read.texture;
+        advect.uFade.value = fade;
+        render(advectPass, f.ink.write, false);
+        f.ink.swap();
+    }
+
+    function clearFluid(f) {
+        scalePass.program.uniforms.uValue.value = 0;
+        [f.velocity, f.ink, f.pressure].forEach(pair => {
+            scalePass.program.uniforms.uSource.value = pair.read.texture;
+            render(scalePass, pair.write, false);
+            pair.swap();
+        });
+    }
+
+    /* ---------- 布局 ---------- */
+    function layout(s) {
+        const slatW = clamp(s.slatWidth, 1, 64);
+        const slatH = clamp(s.slatHeight, 2, 240);
+        const gapSize = clamp(s.gap, 0, 64);
+        const pitchX = slatW + gapSize;
+        const pitchY = slatH + gapSize;
+        const cols = Math.min(2048, Math.ceil((width + gapSize) / pitchX) + 1);
+        const rows = Math.min(2048, Math.ceil((height + gapSize) / pitchY) + 1);
+        const originX = (width - (cols * pitchX - gapSize)) / 2;
+        const originY = (height - (rows * pitchY - gapSize)) / 2;
+        if (fieldTarget.width !== cols || fieldTarget.height !== rows) {
+            disposeTarget(fieldTarget);
+            fieldTarget = createTarget({ width: cols, height: rows, minFilter: gl.NEAREST, magFilter: gl.NEAREST });
+            slatUniforms.tField.value = fieldTarget.texture;
+        }
+        const tilt = Math.min(0.42, Math.asin(clamp((pitchX * 1.5 - slatW * 0.5) / (slatH * 0.5), 0, 1)));
+        return { slatW, slatH, tilt, grid: [cols, rows, pitchX, pitchY], origin: [originX, originY] };
+    }
+
+    /* ---------- 渲染循环 ---------- */
+    function frame(now) {
+        raf = 0;
+        if (!alive) return;
+        const s = settings;
+        const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+        last = now;
+
+        if (!s.paused && !reducedMotion) time += dt * s.speed;
+        introClock = s.intro && !reducedMotion ? introClock + dt / Math.max(0.2, s.introDuration) : 1;
+        const introLinear = Math.min(introClock, 1);
+        const introEase = introLinear < 0.5
+            ? 4 * introLinear * introLinear * introLinear
+            : 1 - Math.pow(-2 * introLinear + 2, 3) / 2;
+
+        if (fluid && splats.length) {
+            const radius = Math.pow(clamp(s.cursorSize, 4, 600) / height, 2) * 0.35;
+            const aspect = width / height;
+            for (const [u, v, du, dv, turn] of splats) {
+                if (turn === null) {
+                    /* RGBA8 降级模式无法存储负速度，只做墨迹发光 */
+                    if (fluid.floatOk) splat(fluid.velocity, [u, v], [du * SPLAT_FORCE, dv * SPLAT_FORCE, 0], radius);
+                    splat(fluid.ink, [u, v], [0.13, 0, 0], radius);
+                    continue;
+                }
+                const jet = radius * 0.55;
+                const reach = Math.sqrt(jet * 0.5) * 1.9;
+                const push = SPLAT_FORCE * 0.08;
+                for (let i = 0; i < SPLASH_JETS; i++) {
+                    const angle = turn + (i / SPLASH_JETS) * Math.PI * 2;
+                    const dx = Math.cos(angle);
+                    const dy = Math.sin(angle);
+                    const point = [u + (dx * reach) / aspect, v + dy * reach];
+                    const spin = [(dx - dy) * Math.SQRT1_2 * push, (dy + dx) * Math.SQRT1_2 * push, 0];
+                    if (fluid.floatOk) splat(fluid.velocity, point, spin, jet);
+                    splat(fluid.ink, point, [0.75, 0, 0], jet);
+                }
+                splat(fluid.ink, [u, v], [0.45, 0, 0], radius);
+            }
+            splats.length = 0;
+            fluidDirty = true;
+        }
+        const fluidActive = fluid !== null && now < fluidUntil;
+        if (fluid) {
+            if (fluidActive) stepFluid(fluid, Math.min(Math.max(dt, 1 / 240), 1 / 30), s);
+            else if (fluidDirty) { clearFluid(fluid); fluidDirty = false; }
+        }
+
+        const grid = layout(s);
+
+        fieldUniforms.uSize.value = [width, height];
+        fieldUniforms.uGrid.value = grid.grid;
+        fieldUniforms.uOrigin.value = grid.origin;
+        fieldUniforms.uSlat.value = [grid.slatW, grid.slatH];
+        fieldUniforms.uTime.value = time;
+        fieldUniforms.uScale.value = s.scale;
+        fieldUniforms.uDirection.value = (s.direction * Math.PI) / 180;
+        fieldUniforms.uChop.value = clamp(s.chop, 0, 1.5);
+        fieldUniforms.uStretch.value = clamp(s.stretch, 0, 0.95);
+        fieldUniforms.uGlint.value = Math.max(0, s.glint);
+        fieldUniforms.uContrast.value = clamp(s.contrast, 0.2, 4);
+        fieldUniforms.uPerspective.value = clamp(s.perspective, 0, 1);
+        fieldUniforms.uFog.value = clamp(s.fog, 0, 1);
+        fieldUniforms.uIntro.value = introEase;
+        fieldUniforms.uFluid.value = fluidActive ? 1 : 0;
+        fieldUniforms.tVelocity.value = fluid ? fluid.velocity.read.texture : null;
+        fieldUniforms.tInk.value = fluid ? fluid.ink.read.texture : null;
+        fieldUniforms.uFluidTexel.value = fluidTexel.value;
+        fieldUniforms.uInk.value = clamp(s.cursorStrength, 0, 3);
+        fieldUniforms.uLean.value = clamp(s.lean, 0, 1);
+        render(fieldMesh, fieldTarget);
+
+        slatUniforms.uSize.value = [width, height];
+        slatUniforms.uDpr.value = dpr;
+        slatUniforms.uGrid.value = grid.grid;
+        slatUniforms.uOrigin.value = grid.origin;
+        slatUniforms.uSlat.value = [grid.slatW, grid.slatH];
+        slatUniforms.uRound.value = clamp(s.roundness, 0, 1);
+        slatUniforms.uTilt.value = fluidActive && s.lean > 0 ? grid.tilt : 0;
+        slatUniforms.uColor.value = s.color.slice(0, 3);
+        slatUniforms.uGlintColor.value = s.glintColor.slice(0, 3);
+        slatUniforms.uBackground.value = s.backgroundColor;
+        render(slatMesh, null);
+
+        const moving = (!s.paused && !reducedMotion && s.speed !== 0) || introClock < 1;
+        if (visible && (moving || fluidActive || fluidDirty)) raf = requestAnimationFrame(frame);
+    }
+
+    function start() {
+        if (raf || !visible || !alive) return;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+    }
+
+    /* ---------- 鼠标交互（流体扰动 + 墨迹发光） ---------- */
+    function locate(e) {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const w = Math.max(1, rect.width);
+        const h = Math.max(1, rect.height);
+        return { x, y, u: x / w, v: 1 - y / h, h, inside: x >= 0 && y >= 0 && x <= w && y <= h };
+    }
+
+    function queue(u, v, du, dv, turn) {
+        if (splats.length > 32) splats.shift();
+        splats.push([u, v, du, dv, turn]);
+        fluidUntil = performance.now() + Math.max(1.5, settings.trail * 5) * 1000;
+        start();
+    }
+
+    function onPointerMove(e) {
+        const spot = locate(e);
+        if (!fluid || !settings.interactive || reducedMotion || !spot.inside) {
+            pointer.tracked = false;
+            return;
+        }
+        if (pointer.tracked && (spot.x !== pointer.x || spot.y !== pointer.y)) {
+            queue(spot.u, spot.v, (spot.x - pointer.x) / spot.h, (pointer.y - spot.y) / spot.h, null);
+        }
+        pointer.x = spot.x;
+        pointer.y = spot.y;
+        pointer.tracked = true;
+    }
+
+    function onPointerDown(e) {
+        const spot = locate(e);
+        if (!fluid || !settings.interactive || reducedMotion || !spot.inside) return;
+        splashTurn += 2.39996;
+        queue(spot.u, spot.v, 0, 0, splashTurn);
+    }
+
+    function onPointerLeave() { pointer.tracked = false; }
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    window.addEventListener('pointerout', e => { if (!e.relatedTarget) onPointerLeave(); });
+    window.addEventListener('blur', onPointerLeave);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
+    /* 老浏览器无 PointerEvent 时退化为 mouse 事件（locate 只用 clientX/Y） */
+    if (!window.PointerEvent) {
+        window.addEventListener('mousemove', e => onPointerMove(e), { passive: true });
+        window.addEventListener('mousedown', e => onPointerDown(e), { passive: true });
+    }
+    console.log('[MicroSlats] WebGL2:', !!gl, '| floatTargets:', floatTargets, '| PointerEvent:', 'PointerEvent' in window);
+
+    /* ---------- 尺寸 ---------- */
+    function resize() {
+        width = Math.max(1, container.clientWidth);
+        height = Math.max(1, container.clientHeight);
+        setSize(width, height);
+        buildFluid();
+        start();
+    }
+    if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(resize).observe(container);
+    } else {
+        window.addEventListener('resize', resize);
+    }
+
+    resize();
+})();
+
+/* ===== 页面数据 ===== */
+const now = new Date();
+document.getElementById('today-date').textContent = (now.getMonth() + 1) + '月' + now.getDate() + '日';
+
+/* HTML 转义（需求 4.2：对用户输入内容做转义） */
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===== 纯静态数据（部署到 GitHub Pages 用） ===== */
+
+/* 文章数据 */
+const blogs = [
+    { id: 1, title: '我的机器学习入门之路', summary: '从零开始接触机器学习的经历、踩过的坑以及一些学习方法分享。', authorNickname: '张良铖', categoryName: '机器学习', tags: ['机器学习', 'Python'], viewCount: 256, commentCount: 4, isTop: 1, createTime: '2026-10-01' },
+    { id: 3, title: 'Transformer 架构从原理到实现', summary: '拆解 Transformer 的自注意力机制、位置编码与多头注意力，并用 PyTorch 实现一个迷你版本。', authorNickname: '张良铖', categoryName: '深度学习', tags: ['Transformer', 'NLP', 'PyTorch'], viewCount: 312, commentCount: 3, isTop: 0, createTime: '2026-10-08' },
+    { id: 2, title: 'PyTorch 张量与自动求导详解', summary: '深入理解 PyTorch 中 Tensor 的创建、运算以及 autograd 自动求导机制。', authorNickname: '张良铖', categoryName: '深度学习', tags: ['PyTorch', 'Python'], viewCount: 189, commentCount: 2, isTop: 0, createTime: '2026-10-05' },
+    { id: 5, title: 'NLP 中的词向量：从 Word2Vec 到 BERT', summary: '梳理词表示技术的演进路线，理解语义嵌入背后的思想。', authorNickname: '张良铖', categoryName: '机器学习', tags: ['NLP', '机器学习'], viewCount: 203, commentCount: 0, isTop: 0, createTime: '2026-10-16' },
+    { id: 4, title: '用 Python 从零实现一个神经网络', summary: '不依赖任何深度学习框架，只用 NumPy 手写一个两层神经网络并训练 MNIST。', authorNickname: '张良铖', categoryName: '项目实战', tags: ['Python', '机器学习'], viewCount: 156, commentCount: 1, isTop: 0, createTime: '2026-10-12' }
+];
+
+/* 渲染文章列表 */
+document.getElementById('blog-count').textContent = blogs.length;
+const listEl = document.getElementById('blog-list');
+listEl.className = '';
+listEl.innerHTML = blogs.map(b => `
+    <div class="blog-card">
+        <h2>${b.isTop === 1 ? '<span class="tag">置顶</span> ' : ''}${esc(b.title)}</h2>
+        <p class="summary">${esc(b.summary)}</p>
+        <div class="meta">
+            <span>作者: ${esc(b.authorNickname)}</span>
+            ${b.categoryName ? `<span class="tag">${esc(b.categoryName)}</span>` : ''}
+            ${b.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+            <span>浏览 ${b.viewCount} · 评论 ${b.commentCount}</span>
+            <span>发布: ${b.createTime}</span>
+        </div>
+    </div>
+`).join('');
+
+/* 用户总数 */
+document.getElementById('user-count').textContent = '1';
+
+/* 博主信息 */
+document.getElementById('author-name').textContent = '张良铖';
+document.getElementById('author-avatar').textContent = '张';
+document.getElementById('author-bio').textContent = '人工智能技术应用专业在读，热爱机器学习与深度学习，记录学习与成长中的点滴。';
+
+/* 分类列表 */
+const categories = [
+    { name: '人工智能', blogCount: 0 },
+    { name: '机器学习', blogCount: 2 },
+    { name: '深度学习', blogCount: 2 },
+    { name: '项目实战', blogCount: 1 },
+    { name: '学习笔记', blogCount: 0 }
+];
+document.getElementById('category-list').innerHTML = categories.map(c => `
+    <div class="cat-item">
+        <span>${c.name}</span>
+        <span class="cnt">${c.blogCount} 篇</span>
+    </div>
+`).join('');
+
+/* 标签云（按使用次数降序） */
+const tags = [
+    { name: 'Python', useCount: 3 },
+    { name: '机器学习', useCount: 3 },
+    { name: 'PyTorch', useCount: 2 },
+    { name: 'NLP', useCount: 2 },
+    { name: 'Transformer', useCount: 1 },
+    { name: 'TensorFlow', useCount: 0 },
+    { name: '计算机视觉', useCount: 0 },
+    { name: '随笔', useCount: 0 }
+];
+document.getElementById('tag-cloud').innerHTML = tags.map(t => `
+    <span class="cloud-tag" style="font-size:${13 + Math.min(t.useCount, 5) * 1.2}px">
+        ${t.name}<span class="cnt">${t.useCount}</span>
+    </span>
+`).join('');
+
+/* 最新评论 */
+const comments = [
+    { nickname: '张良铖', content: '词向量的演进讲得很有条理。', blogTitle: 'NLP 中的词向量：从 Word2Vec 到 BERT', createTime: '2026-10-17' },
+    { nickname: '张良铖', content: 'Transformer 这块终于看懂了，感谢。', blogTitle: 'Transformer 架构从原理到实现', createTime: '2026-10-09' },
+    { nickname: '张良铖', content: '期待深度学习部分的内容！', blogTitle: '我的机器学习入门之路', createTime: '2026-10-04' },
+    { nickname: '张良铖', content: '机器学习入门的困惑和我一样，感谢分享。', blogTitle: '我的机器学习入门之路', createTime: '2026-10-03' },
+    { nickname: '张良铖', content: '写得很清晰，受益匪浅！希望继续更新。', blogTitle: '我的机器学习入门之路', createTime: '2026-10-02' }
+];
+document.getElementById('comment-list').innerHTML = comments.map(cm => `
+    <div class="comment-item">
+        <div class="head">
+            <span class="who">${esc(cm.nickname)}</span>
+            <span class="time">${cm.createTime}</span>
+        </div>
+        <p class="text">${esc(cm.content)}</p>
+        <div class="from">评论于「${esc(cm.blogTitle)}」</div>
+    </div>
+`).join('');
+</script>
+</body>
+</html>
